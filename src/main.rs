@@ -1,4 +1,5 @@
 extern crate gpgme;
+extern crate toml;
 extern crate xdg;
 
 fn main() {
@@ -8,5 +9,20 @@ fn main() {
         println!("config.toml not found");
         std::process::exit(1);
     }
-    println!("{:?}", config_path);
+    let config = std::fs::read_to_string(config_path.unwrap()).unwrap();
+    let value = config.parse::<toml::Value>();
+    if value.is_err() {
+        println!("config.toml is invalid");
+        std::process::exit(2);
+    }
+    let value = value.unwrap();
+    let fpr = value["key"].as_str().unwrap();
+    let mut ctx = gpgme::Context::from_protocol(gpgme::Protocol::OpenPgp).unwrap();
+    let key = ctx.get_secret_key(fpr);
+    if key.is_err() {
+        println!("key with fingerprint {} is invalid", fpr);
+        std::process::exit(3);
+    }
+    let key = key.unwrap();
+    println!("{}", key.id().unwrap());
 }
