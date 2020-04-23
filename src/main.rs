@@ -1,8 +1,12 @@
 extern crate gpgme;
+extern crate xdg;
 
 fn main() {
-    let mut ctx = gpgme::Context::from_protocol(gpgme::Protocol::OpenPgp).unwrap();
-    for key in ctx.secret_keys().unwrap() {
-        println!("{:?}", key);
+    let xdg_dirs = xdg::BaseDirectories::with_prefix("snowden").unwrap();
+    let config_path = xdg_dirs.find_config_file("config.toml");
+    if config_path.is_none() {
+        println!("config.toml not found");
+        std::process::exit(1);
     }
+    println!("{:?}", config_path);
 }
