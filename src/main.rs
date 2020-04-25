@@ -2,7 +2,7 @@ extern crate gpgme;
 extern crate toml;
 extern crate xdg;
 
-fn main() {
+fn get_key() -> gpgme::Key {
     let xdg_dirs = xdg::BaseDirectories::with_prefix("snowden").unwrap();
     let config_path = xdg_dirs.find_config_file("config.toml");
     if config_path.is_none() {
@@ -23,6 +23,10 @@ fn main() {
         println!("key with fingerprint {} is invalid", fpr);
         std::process::exit(3);
     }
-    let key = key.unwrap();
-    println!("{}", key.id().unwrap());
+    return key.unwrap();
+}
+
+fn main() {
+    let key = get_key();
+    println!("{:?}", key);
 }
