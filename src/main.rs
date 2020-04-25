@@ -43,13 +43,52 @@ fn get_repo() -> git2::Repository {
     repo.unwrap()
 }
 
+fn commit(key: gpgme::Key, repo: git2::Repository, msg: &str) {
+    let head = repo.head();
+    if head.is_err() {
+        println!("error fetching head");
+        std::process::exit(6);
+    }
+    let head = head.unwrap();
+    let target = head.target().unwrap();
+    let object = repo.find_object(target, None).unwrap();
+    let prev_commit = object.as_commit();
+    if prev_commit.is_none() {
+        println!("head doesn't point to a commit");
+        std::process::exit(7);
+    }
+    let prev_commit = prev_commit.unwrap();
+    let signature = git2::Signature::now(key.id().unwrap(), "anon@ymo.us").unwrap();
+    let commit = repo.commit(
+        Some("HEAD"),
+        &signature,
+        &signature,
+        msg,
+        &prev_commit.tree().unwrap(),
+        &[prev_commit],
+    );
+    println!("{}", msg);
+    if commit.is_err() {
+        println!("failed to create commit");
+        std::process::exit(8);
+    }
+}
+
 fn main() {
     let key = get_key();
     let repo = get_repo();
     let matches = clap::App::new("snowden")
-        .subcommand(clap::SubCommand::with_name("commit"))
+        .subcommand(
+            clap::SubCommand::with_name("commit").arg(
+                clap::Arg::with_name("MESSAGE")
+                    .short("m")
+                    .long("message")
+                    .required(true)
+                    .takes_value(true),
+            ),
+        )
         .get_matches();
-    if matches.subcommand_matches("commit").is_some() {
-        // Do some committing.
+    if let Some(matches) = matches.subcommand_matches("commit") {
+        commit(key, repo, matches.value_of("MESSAGE").unwrap());
     }
 }
