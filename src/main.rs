@@ -67,7 +67,6 @@ fn commit(key: gpgme::Key, repo: git2::Repository, msg: &str) {
         &prev_commit.tree().unwrap(),
         &[prev_commit],
     );
-    println!("{}", msg);
     if commit.is_err() {
         println!("failed to create commit");
         std::process::exit(8);
