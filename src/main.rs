@@ -1,3 +1,4 @@
+extern crate clap;
 extern crate git2;
 extern crate gpgme;
 extern crate toml;
@@ -45,6 +46,10 @@ fn get_repo() -> git2::Repository {
 fn main() {
     let key = get_key();
     let repo = get_repo();
-    println!("{:?}", key);
-    println!("{:?}", repo.path());
+    let matches = clap::App::new("snowden")
+        .subcommand(clap::SubCommand::with_name("commit"))
+        .get_matches();
+    if matches.subcommand_matches("commit").is_some() {
+        // Do some committing.
+    }
 }
