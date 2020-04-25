@@ -24,7 +24,7 @@ fn get_key() -> gpgme::Key {
         println!("key with fingerprint {} is invalid", fpr);
         std::process::exit(3);
     }
-    return key.unwrap();
+    key.unwrap()
 }
 
 fn get_repo() -> git2::Repository {
@@ -39,8 +39,7 @@ fn get_repo() -> git2::Repository {
         println!("current directory is not a valid git repository");
         std::process::exit(5);
     }
-    let repo = repo.unwrap();
-    return repo;
+    repo.unwrap()
 }
 
 fn main() {
