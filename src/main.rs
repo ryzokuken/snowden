@@ -1,3 +1,4 @@
+extern crate git2;
 extern crate gpgme;
 extern crate toml;
 extern crate xdg;
@@ -26,7 +27,25 @@ fn get_key() -> gpgme::Key {
     return key.unwrap();
 }
 
+fn get_repo() -> git2::Repository {
+    let path = std::env::current_dir();
+    if path.is_err() {
+        println!("current directory is invalid");
+        std::process::exit(4);
+    }
+    let path = path.unwrap();
+    let repo = git2::Repository::open(path);
+    if repo.is_err() {
+        println!("current directory is not a valid git repository");
+        std::process::exit(5);
+    }
+    let repo = repo.unwrap();
+    return repo;
+}
+
 fn main() {
     let key = get_key();
+    let repo = get_repo();
     println!("{:?}", key);
+    println!("{:?}", repo.path());
 }
