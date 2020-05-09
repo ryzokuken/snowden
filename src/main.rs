@@ -4,13 +4,16 @@ extern crate gpgme;
 extern crate toml;
 extern crate xdg;
 
-fn get_key(config_path: std::path::PathBuf) -> gpgme::Key {
+fn get_key_fingerprint(config_path: std::path::PathBuf) -> String {
     let config = std::fs::read_to_string(config_path)
         .expect("error reading config.toml");
     let value = config
         .parse::<toml::Value>()
         .expect("config.toml is invalid");
-    let fpr = value["key"].as_str().expect("key fingerprint invalid");
+    String::from(value["key"].as_str().expect("key fingerprint invalid"))
+}
+
+fn get_key(fpr: &str) -> gpgme::Key {
     let mut ctx = gpgme::Context::from_protocol(gpgme::Protocol::OpenPgp)
         .expect("failed to connect to gpg");
     ctx.get_secret_key(fpr).expect("invalid key specified")
@@ -59,6 +62,13 @@ fn main() {
                 .takes_value(true)
                 .value_name("FILE"),
         )
+        .arg(
+            clap::Arg::with_name("key")
+                .short("k")
+                .long("key")
+                .takes_value(true)
+                .value_name("FINGERPRINT"),
+        )
         .subcommand(
             clap::SubCommand::with_name("commit").arg(
                 clap::Arg::with_name("MESSAGE")
@@ -69,11 +79,17 @@ fn main() {
             ),
         )
         .get_matches();
-    let config_path = match matches.value_of("config") {
-        Some(file) => std::path::PathBuf::from(file),
-        None => get_xdg_config(),
+    let fpr = match matches.value_of("key") {
+        Some(fpr) => String::from(fpr),
+        None => {
+            let config_path = match matches.value_of("config") {
+                Some(file) => std::path::PathBuf::from(file),
+                None => get_xdg_config(),
+            };
+            get_key_fingerprint(config_path)
+        }
     };
-    let key = get_key(config_path);
+    let key = get_key(fpr.as_str());
     if let Some(matches) = matches.subcommand_matches("commit") {
         commit(key, repo, matches.value_of("MESSAGE").unwrap());
     }
