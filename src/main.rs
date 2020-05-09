@@ -4,12 +4,7 @@ extern crate gpgme;
 extern crate toml;
 extern crate xdg;
 
-fn get_key() -> gpgme::Key {
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("snowden")
-        .expect("cannot find config directory");
-    let config_path = xdg_dirs
-        .find_config_file("config.toml")
-        .expect("config.toml not found");
+fn get_key(config_path: std::path::PathBuf) -> gpgme::Key {
     let config = std::fs::read_to_string(config_path)
         .expect("error reading config.toml");
     let value = config
@@ -19,6 +14,14 @@ fn get_key() -> gpgme::Key {
     let mut ctx = gpgme::Context::from_protocol(gpgme::Protocol::OpenPgp)
         .expect("failed to connect to gpg");
     ctx.get_secret_key(fpr).expect("invalid key specified")
+}
+
+fn get_xdg_config() -> std::path::PathBuf {
+    let xdg_dirs = xdg::BaseDirectories::with_prefix("snowden")
+        .expect("cannot find config directory");
+    xdg_dirs
+        .find_config_file("config.toml")
+        .expect("config.toml not found")
 }
 
 fn get_repo() -> git2::Repository {
@@ -47,9 +50,15 @@ fn commit(key: gpgme::Key, repo: git2::Repository, msg: &str) {
 }
 
 fn main() {
-    let key = get_key();
     let repo = get_repo();
     let matches = clap::App::new("snowden")
+        .arg(
+            clap::Arg::with_name("config")
+                .short("c")
+                .long("config")
+                .takes_value(true)
+                .value_name("FILE"),
+        )
         .subcommand(
             clap::SubCommand::with_name("commit").arg(
                 clap::Arg::with_name("MESSAGE")
@@ -60,6 +69,11 @@ fn main() {
             ),
         )
         .get_matches();
+    let config_path = match matches.value_of("config") {
+        Some(file) => std::path::PathBuf::from(file),
+        None => get_xdg_config(),
+    };
+    let key = get_key(config_path);
     if let Some(matches) = matches.subcommand_matches("commit") {
         commit(key, repo, matches.value_of("MESSAGE").unwrap());
     }
