@@ -41,6 +41,16 @@ fn commit(key: gpgme::Key, repo: git2::Repository, msg: &str) {
         object.as_commit().expect("head doesn't point to a commit");
     let signature =
         git2::Signature::now(key.id().unwrap(), "anon@ymo.us").unwrap();
+    if repo
+        .diff_tree_to_index(Some(&prev_commit.tree().unwrap()), None, None)
+        .unwrap()
+        .stats()
+        .unwrap()
+        .files_changed()
+        == 0
+    {
+        panic!("no staged changed");
+    }
     repo.commit(
         Some("HEAD"),
         &signature,
