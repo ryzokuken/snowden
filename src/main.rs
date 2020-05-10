@@ -51,12 +51,15 @@ fn commit(key: gpgme::Key, repo: git2::Repository, msg: &str) {
     {
         panic!("no staged changed");
     }
+    let new_target = repo.index().unwrap().write_tree().unwrap();
+    let new_object = repo.find_object(new_target, None).unwrap();
+    let new_tree = new_object.as_tree().unwrap();
     repo.commit(
         Some("HEAD"),
         &signature,
         &signature,
         msg,
-        &prev_commit.tree().unwrap(),
+        &new_tree,
         &[prev_commit],
     )
     .expect("failed to create commit");
