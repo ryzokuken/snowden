@@ -5,7 +5,6 @@ extern crate toml;
 extern crate xdg;
 
 #[cfg(test)]
-#[path="./main_test.rs"]
 mod main_test;
 
 fn get_key_fingerprint(config_path: std::path::PathBuf) -> String {
