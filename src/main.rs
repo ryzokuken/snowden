@@ -7,7 +7,7 @@ extern crate xdg;
 #[cfg(test)]
 mod main_test;
 
-fn get_key_fingerprint(config_path: std::path::PathBuf) -> String {
+fn get_key_fingerprint(config_path: &std::path::PathBuf) -> String {
     let config = std::fs::read_to_string(config_path)
         .expect("error reading config.toml");
     let value = config
@@ -102,7 +102,7 @@ fn main() {
                 Some(file) => std::path::PathBuf::from(file),
                 None => get_xdg_config(),
             };
-            get_key_fingerprint(config_path)
+            get_key_fingerprint(&config_path)
         }
     };
     let key = get_key(fpr.as_str());
