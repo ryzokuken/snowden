@@ -1,9 +1,3 @@
-extern crate clap;
-extern crate git2;
-extern crate gpgme;
-extern crate toml;
-extern crate xdg;
-
 #[cfg(test)]
 mod tests;
 
