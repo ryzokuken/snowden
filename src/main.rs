@@ -5,9 +5,9 @@ extern crate toml;
 extern crate xdg;
 
 #[cfg(test)]
-mod main_test;
+mod tests;
 
-fn get_key_fingerprint(config_path: &std::path::PathBuf) -> String {
+fn get_key_fingerprint(config_path: &std::path::Path) -> String {
     let config = std::fs::read_to_string(config_path)
         .expect("error reading config.toml");
     let value = config
